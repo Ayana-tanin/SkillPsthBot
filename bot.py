@@ -16,10 +16,7 @@ load_dotenv()
 logging.basicConfig(
     level=logging.DEBUG,  # Изменено на DEBUG для более подробного логирования
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),  # Вывод в консоль
-        logging.FileHandler('bot.log')  # Вывод в файл
-    ]
+    handlers=[ logging.StreamHandler() ]  # Вывод только в консоль (удалён FileHandler)
 )
 logger = logging.getLogger(__name__)
 
