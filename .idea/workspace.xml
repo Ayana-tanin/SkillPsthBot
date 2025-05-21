@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3cebc2e4-f890-4265-a977-317d8a49eab5" name="Changes" comment="" />
+    <list default="true" id="3cebc2e4-f890-4265-a977-317d8a49eab5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -21,7 +23,7 @@
 }]]></component>
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
-    "url": "https://github.com/MamaSita8828/Skill_Path",
+    "url": "git@github.com:Ayana-tanin/SkillPsthBot.git",
     "accountId": "97a98404-9191-4b8d-9d43-a5dd656acc69"
   }
 }]]></component>
@@ -67,7 +69,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1746706015997</updated>
-      <workItem from="1747824357856" duration="325000" />
+      <workItem from="1747824357856" duration="1199000" />
     </task>
     <servers />
   </component>
