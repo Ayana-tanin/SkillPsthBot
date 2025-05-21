@@ -14,49 +14,82 @@ load_dotenv()
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.DEBUG,  # Изменено на DEBUG для более подробного логирования
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Вывод в консоль
+        logging.FileHandler('bot.log')  # Вывод в файл
+    ]
 )
 logger = logging.getLogger(__name__)
 
 # Инициализация бота и диспетчера
-bot = Bot(token=settings.BOT_TOKEN)
-storage = MemoryStorage()
-dp = Dispatcher(storage=storage)
-
+try:
+    logger.info("Инициализация бота...")
+    bot = Bot(token=settings.BOT_TOKEN)
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)
+    logger.info("Бот успешно инициализирован")
+except Exception as e:
+    logger.error(f"Ошибка при инициализации бота: {e}")
+    raise
 
 # Регистрация обработчиков
 def register_handlers(dispatcher):
-    commands.register_handlers(dispatcher)
-    callbacks.register_handlers(dispatcher)
-    goals.register_handlers(dispatcher)
-    materials.register_handlers(dispatcher)
-    test.register_handlers(dispatcher)
-    registration.register_registration_handlers(dispatcher)
-    messages.register_handlers(dispatcher)
-
+    try:
+        logger.info("Регистрация обработчиков...")
+        commands.register_handlers(dispatcher)
+        callbacks.register_handlers(dispatcher)
+        goals.register_handlers(dispatcher)
+        materials.register_handlers(dispatcher)
+        test.register_handlers(dispatcher)
+        registration.register_registration_handlers(dispatcher)
+        messages.register_handlers(dispatcher)
+        logger.info("Обработчики успешно зарегистрированы")
+    except Exception as e:
+        logger.error(f"Ошибка при регистрации обработчиков: {e}")
+        raise
 
 async def on_startup():
-    logger.info("Бот запущен")
-    # Здесь может быть дополнительная инициализация
-
+    try:
+        logger.info("Запуск бота...")
+        # Здесь может быть дополнительная инициализация
+        logger.info("Бот успешно запущен")
+    except Exception as e:
+        logger.error(f"Ошибка при запуске бота: {e}")
+        raise
 
 async def on_shutdown():
-    logger.info("Бот остановлен")
-    # Закрытие соединений, очистка ресурсов и т.д.
-
+    try:
+        logger.info("Остановка бота...")
+        # Закрытие соединений, очистка ресурсов и т.д.
+        logger.info("Бот успешно остановлен")
+    except Exception as e:
+        logger.error(f"Ошибка при остановке бота: {e}")
+        raise
 
 async def main():
-    # Регистрация обработчиков
-    register_handlers(dp)
+    try:
+        # Регистрация обработчиков
+        register_handlers(dp)
 
-    # Установка хэндлеров для запуска и завершения
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
+        # Установка хэндлеров для запуска и завершения
+        dp.startup.register(on_startup)
+        dp.shutdown.register(on_shutdown)
 
-    # Запуск бота
-    await dp.start_polling(bot)
-
+        # Запуск бота
+        logger.info("Начало работы бота...")
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.error(f"Критическая ошибка в main: {e}")
+        raise
 
 if __name__ == '__main__':
-    asyncio.run(main())  # Заменяет executor.start_polling()
+    try:
+        logger.info("Запуск приложения...")
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Получен сигнал завершения работы")
+    except Exception as e:
+        logger.error(f"Необработанная ошибка: {e}")
+        raise
