@@ -23,7 +23,10 @@ def init_database():
     # Подключаемся к существующей базе данных из MYSQL_URL
     mysql_url = os.getenv("MYSQL_URL")
     if not mysql_url:
+        logger.error("MYSQL_URL не установлен в переменных окружения")
         raise ValueError("MYSQL_URL не установлен в переменных окружения")
+    
+    logger.info(f"Начинаем инициализацию базы данных с URL: {mysql_url}")
     
     try:
         # Подключаемся к существующей базе данных
@@ -43,18 +46,21 @@ def init_database():
     try:
         # Проверяем существование таблиц
         tables_to_check = ['users', 'test_results', 'test_progress']
+        logger.info(f"Проверяем существование таблиц: {', '.join(tables_to_check)}")
+        
         existing_tables = [table for table in tables_to_check if check_table_exists(cursor, table)]
+        logger.info(f"Найдены существующие таблицы: {', '.join(existing_tables) if existing_tables else 'нет'}")
         
         if not existing_tables:
             logger.info("Таблицы не существуют. Создаем все таблицы...")
         else:
-            logger.info(f"Существующие таблицы: {', '.join(existing_tables)}")
             missing_tables = [table for table in tables_to_check if table not in existing_tables]
             if missing_tables:
                 logger.info(f"Создаем отсутствующие таблицы: {', '.join(missing_tables)}")
 
         # Создание таблицы users, если её нет
         if 'users' not in existing_tables:
+            logger.info("Создаем таблицу users...")
             cursor.execute("""
                 CREATE TABLE users (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,10 +77,11 @@ def init_database():
                     opened_profiles TEXT
                 )
             """)
-            logger.info("Таблица users создана")
+            logger.info("Таблица users успешно создана")
         
         # Создание таблицы test_results, если её нет
         if 'test_results' not in existing_tables:
+            logger.info("Создаем таблицу test_results...")
             cursor.execute("""
                 CREATE TABLE test_results (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,10 +92,11 @@ def init_database():
                     details TEXT
                 )
             """)
-            logger.info("Таблица test_results создана")
+            logger.info("Таблица test_results успешно создана")
         
         # Создание таблицы test_progress, если её нет
         if 'test_progress' not in existing_tables:
+            logger.info("Создаем таблицу test_progress...")
             cursor.execute("""
                 CREATE TABLE test_progress (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -101,7 +109,7 @@ def init_database():
                     updated_at DATETIME
                 )
             """)
-            logger.info("Таблица test_progress создана")
+            logger.info("Таблица test_progress успешно создана")
         
         connection.commit()
         logger.info("Инициализация таблиц завершена успешно")
@@ -111,6 +119,7 @@ def init_database():
     finally:
         cursor.close()
         connection.close()
+        logger.info("Соединение с базой данных закрыто")
 
 def get_connection():
     # Используем переменную окружения MYSQL_URL

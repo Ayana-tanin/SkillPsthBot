@@ -15,6 +15,7 @@ from collections import defaultdict
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import asyncio
 import re
+from config import settings
 
 router = Router()
 
@@ -302,7 +303,9 @@ RECOMMENDATION = {
     'ky': '✨ SkillPath кеңеш берет: Күчтүү жактарыңды өнүктүр жана ар кандай багыттарда өзүңдү сына. Кесиптер дүйнөсү дайыма өзгөрөт, сенин уникалдуу сапаттарың ар түрдүү тармактарда керек болушу мүмкүн!'
 }
 
-API_URL = "http://localhost:8000/users/"
+# Удаляем хардкодированные URL
+# API_URL = "http://localhost:8000/users/"
+# API_PROGRESS_URL = "http://localhost:8000/test_progress/"
 
 # === ПОЛНЫЙ СЛОВАРЬ АРТЕФАКТОВ ПО ПРОФЕССИЯМ ===
 ARTIFACTS_BY_PROFESSION = {
@@ -697,8 +700,6 @@ PROFESSION_TIPS = {
     }
 }
 
-API_URL = "http://localhost:8000/users/"
-
 # --- Словарь соответствия кыргызских и русских профилей ---
 KY_TO_RU_PROFILE = {
     'Техникалык': 'Техническая',
@@ -722,18 +723,16 @@ PROFILE_TRANSLATIONS = {
     }
 }
 
-API_PROGRESS_URL = "http://localhost:8000/test_progress/"
-
 async def get_user_data_from_api(telegram_id: int):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={telegram_id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={telegram_id}") as resp:
             if resp.status == 200:
                 return await resp.json()
             return None
 
 async def load_test_progress(telegram_id):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_PROGRESS_URL}?telegram_id={telegram_id}") as resp:
+        async with session.get(f"{settings.API_URL}/test_progress/?telegram_id={telegram_id}") as resp:
             if resp.status == 200:
                 data = await resp.json()
                 if data and data.get("telegram_id"):
@@ -760,11 +759,11 @@ async def save_test_progress(telegram_id, scene_index, all_scenes, profile_score
         "lang": lang
     }
     async with aiohttp.ClientSession() as session:
-        await session.post(API_PROGRESS_URL, json=payload)
+        await session.post(f"{settings.API_URL}/test_progress/", json=payload)
 
 async def delete_test_progress(telegram_id):
     async with aiohttp.ClientSession() as session:
-        await session.delete(f"{API_PROGRESS_URL}?telegram_id={telegram_id}")
+        await session.delete(f"{settings.API_URL}/test_progress/?telegram_id={telegram_id}")
 
 @router.message(Command("test"))
 async def start_test(message: Message, state: FSMContext):
@@ -989,7 +988,6 @@ async def show_test_result(message_or_callback, state: FSMContext, all_collected
     user_id = message_or_callback.from_user.id if hasattr(message_or_callback, 'from_user') else message_or_callback.message.from_user.id
     lang = data.get('lang', 'ru')
     artifact_lang = lang
-    API_USER = "http://localhost:8000/users/"
     
     # --- Локализация ключей для детализации ---
     details_keys = {
@@ -1061,7 +1059,7 @@ async def show_test_result(message_or_callback, state: FSMContext, all_collected
     # --- Получаем список артефактов пользователя ---
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_USER}?telegram_id={user_id}") as resp:
+            async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
                 user = await resp.json() if resp.status == 200 else {}
     except Exception as e:
         user = {}
@@ -1089,7 +1087,7 @@ async def show_test_result(message_or_callback, state: FSMContext, all_collected
                 if user_data.get('language') not in ['ru', 'ky']:
                     user_data['language'] = normalize_lang(user_data.get('language', 'ru'))
                 async with aiohttp.ClientSession() as session:
-                    await session.post(API_USER, json=user_data)
+                    await session.post(settings.API_URL, json=user_data)
             if new_artifact:
                 await message_or_callback.answer(f"🎉 Ты получил новый артефакт: <b>{artifact_key}</b>!" if lang == 'ru' else f"🎉 Сен жаңы артефакт алдың: <b>{artifact_key}</b>!", parse_mode="HTML")
         except Exception as e:
@@ -1101,7 +1099,7 @@ async def show_test_result(message_or_callback, state: FSMContext, all_collected
     # --- Добавляем профиль в opened_profiles ---
     if top_profession:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_USER}?telegram_id={user_id}") as resp:
+            async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
                 user = await resp.json() if resp.status == 200 else {}
         opened_profiles = set(user.get('opened_profiles', []) or [])
         opened_profiles.add(top_profession)
@@ -1114,7 +1112,7 @@ async def show_test_result(message_or_callback, state: FSMContext, all_collected
         if user_data.get('language') not in ['ru', 'ky']:
             user_data['language'] = normalize_lang(user_data.get('language', 'ru'))
         async with aiohttp.ClientSession() as session:
-            await session.post(API_USER, json=user_data)
+            await session.post(settings.API_URL, json=user_data)
     
     # --- КРАСИВОЕ ОФОРМЛЕНИЕ ---
     lines = []
@@ -1230,7 +1228,7 @@ async def handle_personal_scene_callback(callback: CallbackQuery, state: FSMCont
 async def show_artifact_collection(message: Message):
     user_id = message.from_user.id
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={user_id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
             user = await resp.json() if resp.status == 200 else {}
     user_artifacts = set(user.get('artifacts', []) or [])
     lang = await get_user_lang(user_id)
@@ -1266,7 +1264,7 @@ async def show_artifact_collection(message: Message):
 async def show_artifacts_by_branch(callback: CallbackQuery):
     user_id = callback.from_user.id
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={user_id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
             user = await resp.json() if resp.status == 200 else {}
     user_artifacts = set(user.get('artifacts', []) or [])
     lang = await get_user_lang(user_id)
@@ -1363,7 +1361,7 @@ async def artifact_choose_profile(callback: CallbackQuery):
 async def show_portals(message: Message):
     user_id = message.from_user.id
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={user_id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
             user = await resp.json() if resp.status == 200 else {}
     opened_profiles = user.get('opened_profiles', []) or []
     # --- Автокоррекция: заменяем кыргызские профили на русские ---
@@ -1378,7 +1376,7 @@ async def show_portals(message: Message):
     if changed:
         user['opened_profiles'] = corrected_profiles
         async with aiohttp.ClientSession() as session:
-            await session.post(API_URL, json=user)
+            await session.post(settings.API_URL, json=user)
         print(f"[DEBUG] Исправлены opened_profiles: {corrected_profiles}")
     opened_profiles = corrected_profiles
     lang = await get_user_lang(user_id)
@@ -1422,7 +1420,7 @@ async def start_personal_portal(callback: CallbackQuery, state: FSMContext):
     )
     # --- Сохраняем открытый профиль (всегда на русском) ---
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={callback.from_user.id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={callback.from_user.id}") as resp:
             user = await resp.json() if resp.status == 200 else {}
     opened_profiles = set(user.get('opened_profiles', []) or [])
     # --- Автокоррекция при сохранении ---
@@ -1435,7 +1433,7 @@ async def start_personal_portal(callback: CallbackQuery, state: FSMContext):
     corrected_profiles.add(profile_name)
     user['opened_profiles'] = list(corrected_profiles)
     async with aiohttp.ClientSession() as session:
-        await session.post(API_URL, json=user)
+        await session.post(settings.API_URL, json=user)
     await send_scene(callback, personal_scenes[0], scene_type='personal', state=state)
     await callback.answer()
 

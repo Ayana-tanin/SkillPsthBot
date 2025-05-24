@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     # Настройки API
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
+    API_URL: str = os.getenv("API_URL", f"http://{API_HOST}:{API_PORT}")
     
     class Config:
         env_file = ".env"

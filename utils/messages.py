@@ -1,5 +1,6 @@
 import aiohttp
 import json
+from config import settings
 
 MESSAGES = {
     "ru": {
@@ -221,10 +222,9 @@ def normalize_lang(lang):
 
 async def get_user_lang(user_id: int) -> str:
     """Получить язык пользователя из базы (API) по telegram_id. Возвращает 'ru' по умолчанию."""
-    API_URL = "http://localhost:8000/users/"
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_URL}?telegram_id={user_id}") as resp:
+            async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
                 if resp.status == 200:
                     user = await resp.json()
                     return normalize_lang(user.get("language", "ru"))

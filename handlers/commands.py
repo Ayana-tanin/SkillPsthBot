@@ -13,6 +13,7 @@ from utils.messages import get_message, get_user_lang, format_test_stats
 from utils.states import GoalStates, MaterialStates, NoteStates, ProfileStates, SettingsStates
 from utils.error_handler import handle_errors
 import aiohttp
+from config import settings
 
 router = Router()
 
@@ -138,9 +139,8 @@ async def cmd_cancel(message: Message, state: FSMContext):
 async def show_stats(message: Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
-    API_URL = "http://localhost:8000/test_results/"
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={user_id}") as resp:
+        async with session.get(f"{settings.API_URL}/test_results/?telegram_id={user_id}") as resp:
             results = await resp.json()
     if not results:
         await message.answer(get_message("stats_none", lang))
@@ -171,12 +171,10 @@ async def show_profile(message: Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     # --- Получаем данные из API ---
-    API_USER = "http://localhost:8000/users/"
-    API_RESULTS = "http://localhost:8000/test_results/"
     user_api = {}
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_USER}?telegram_id={user_id}") as resp:
+            async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
                 if resp.status == 200:
                     user_api = await resp.json()
     except Exception as e:
@@ -211,7 +209,7 @@ async def show_profile(message: Message):
     results = []
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_RESULTS}?telegram_id={user_id}") as resp:
+            async with session.get(f"{settings.API_URL}/test_results/?telegram_id={user_id}") as resp:
                 if resp.status == 200:
                     results = await resp.json()
     except Exception as e:

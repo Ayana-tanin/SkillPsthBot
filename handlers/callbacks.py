@@ -15,6 +15,7 @@ from utils.keyboards import (
 )
 from utils.states import RegistrationStates
 from utils.states import SettingsStates
+from config import settings
 
 router = Router()
 
@@ -95,11 +96,10 @@ async def change_language_callback(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.in_(["lang_ru", "lang_ky"]))
 async def set_language_callback(callback: CallbackQuery, state: FSMContext):
     lang = "ru" if callback.data == "lang_ru" else "ky"
-    API_URL = "http://localhost:8000/users/"
     user_id = callback.from_user.id
     # Получаем текущие данные пользователя
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={user_id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
             user = await resp.json()
     if not user or not user.get("telegram_id"):
         user = {"telegram_id": user_id, "language": lang}
@@ -111,7 +111,7 @@ async def set_language_callback(callback: CallbackQuery, state: FSMContext):
     if isinstance(user.get('opened_profiles'), list):
         user['opened_profiles'] = json.dumps(user['opened_profiles'], ensure_ascii=False)
     async with aiohttp.ClientSession() as session:
-        await session.post(API_URL, json=user)
+        await session.post(f"{settings.API_URL}/users/", json=user)
     await callback.message.edit_text(get_message("language_changed", lang, lang_name="Кыргызский" if lang == "ky" else "Русский"))
     await state.clear()
     await callback.message.answer(get_message("welcome", lang), reply_markup=get_main_keyboard(lang))
@@ -127,9 +127,8 @@ async def update_main_menu(callback: CallbackQuery):
 async def show_profile(callback: CallbackQuery):
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
-    API_URL = "http://localhost:8000/users/"
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={user_id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
             user = await resp.json()
     if not user or not user.get("telegram_id"):
         await callback.message.answer("Профиль не найден. Пожалуйста, пройдите регистрацию.")
