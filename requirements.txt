@@ -6,7 +6,6 @@ pytest-asyncio==0.21.1
 flake8==6.1.0
 redis==5.0.1
 python-dateutil==2.8.2
-<<<<<<< HEAD
 pydantic==2.5.2
 pydantic-settings==2.1.0
 fastapi==0.104.1
@@ -16,11 +15,4 @@ cryptography==41.0.5
 protobuf==4.25.1
 async-timeout==4.0.3
 typing-extensions==4.8.0
-=======
-pydantic>=2.0.0
-pydantic-settings>=2.0.0
-fastapi
-uvicorn
-mysql-connector-python
 requests>=2.31.0
->>>>>>> 84bfe15ac6710e0105e1b6ec45e2f0881e027c07
