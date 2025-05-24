@@ -45,7 +45,7 @@ def init_database():
     cursor = connection.cursor()
     try:
         # Проверяем существование таблиц
-        tables_to_check = ['users', 'test_results', 'test_progress']
+        tables_to_check = ['users', 'test_results', 'test_progress', 'goals', 'materials', 'notes']
         logger.info(f"Проверяем существование таблиц: {', '.join(tables_to_check)}")
         
         existing_tables = [table for table in tables_to_check if check_table_exists(cursor, table)]
@@ -110,6 +110,57 @@ def init_database():
                 )
             """)
             logger.info("Таблица test_progress успешно создана")
+
+        # Создание таблицы goals, если её нет
+        if 'goals' not in existing_tables:
+            logger.info("Создаем таблицу goals...")
+            cursor.execute("""
+                CREATE TABLE goals (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    telegram_id BIGINT UNSIGNED,
+                    title VARCHAR(255),
+                    description TEXT,
+                    deadline DATE,
+                    priority VARCHAR(20),
+                    status VARCHAR(20),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """)
+            logger.info("Таблица goals успешно создана")
+
+        # Создание таблицы materials, если её нет
+        if 'materials' not in existing_tables:
+            logger.info("Создаем таблицу materials...")
+            cursor.execute("""
+                CREATE TABLE materials (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    telegram_id BIGINT UNSIGNED,
+                    title VARCHAR(255),
+                    description TEXT,
+                    link VARCHAR(512),
+                    category VARCHAR(100),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """)
+            logger.info("Таблица materials успешно создана")
+
+        # Создание таблицы notes, если её нет
+        if 'notes' not in existing_tables:
+            logger.info("Создаем таблицу notes...")
+            cursor.execute("""
+                CREATE TABLE notes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    telegram_id BIGINT UNSIGNED,
+                    title VARCHAR(255),
+                    content TEXT,
+                    category VARCHAR(100),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            """)
+            logger.info("Таблица notes успешно создана")
         
         connection.commit()
         logger.info("Инициализация таблиц завершена успешно")
