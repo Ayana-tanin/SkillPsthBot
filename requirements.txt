@@ -11,3 +11,4 @@ pydantic-settings>=2.0.0
 fastapi
 uvicorn
 mysql-connector-python
+requests>=2.31.0
