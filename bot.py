@@ -56,7 +56,7 @@ def run_fastapi():
     try:
         logger.info("Запуск FastAPI приложения...")
         process = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", os.getenv("PORT", "8000")],
+            [sys.executable, "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", str(settings.PORT)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True

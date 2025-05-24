@@ -4,11 +4,11 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from utils.messages import get_user_lang, normalize_lang
 import aiohttp
+from config import settings
 
 async def get_user_data_from_api(telegram_id: int):
-    API_URL = "http://localhost:8000/users/"
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}?telegram_id={telegram_id}") as resp:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={telegram_id}") as resp:
             if resp.status == 200:
                 return await resp.json()
             return None

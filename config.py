@@ -18,11 +18,11 @@ class Settings(BaseSettings):
     REDIS_DB: int = int(os.getenv("REDIS_DB", 0))
     
     # Настройки MySQL (Railway)
-    MYSQL_HOST: str = os.getenv("RAILWAY_PRIVATE_DOMAIN", os.getenv("MYSQLHOST", "localhost"))
+    MYSQL_HOST: str = os.getenv("MYSQLHOST", "localhost")
     MYSQL_USER: str = os.getenv("MYSQLUSER", "root")
-    MYSQL_PASSWORD: str = os.getenv("MYSQL_ROOT_PASSWORD", os.getenv("MYSQLPASSWORD", ""))
-    MYSQL_DATABASE: str = os.getenv("MYSQL_DATABASE", os.getenv("MYSQLDATABASE", "railway"))
-    MYSQL_PORT: int = int(os.getenv("RAILWAY_TCP_PROXY_PORT", os.getenv("MYSQLPORT", "3306")))
+    MYSQL_PASSWORD: str = os.getenv("MYSQLPASSWORD", "")
+    MYSQL_DATABASE: str = os.getenv("MYSQLDATABASE", "railway")
+    MYSQL_PORT: int = int(os.getenv("MYSQLPORT", "3306"))
     
     # Настройки логирования
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     
     # Настройки API
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
-    API_PORT: int = int(os.getenv("PORT", "8000"))  # Используем PORT из Railway
-    API_URL: str = os.getenv("API_URL", f"http://localhost:{API_PORT}")  # Всегда используем localhost для внутренних запросов
+    PORT: int = int(os.getenv("PORT", "8000"))  # Порт из Railway
+    API_URL: str = os.getenv("API_URL", f"http://localhost:{PORT}")  # Всегда используем localhost для внутренних запросов
     
     class Config:
         env_file = ".env"
