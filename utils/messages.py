@@ -1,6 +1,10 @@
 import json
+<<<<<<< HEAD
 from database import UserManager
 from utils.artifacts import ARTIFACTS_BY_PROFESSION
+=======
+from config import settings
+>>>>>>> 84bfe15ac6710e0105e1b6ec45e2f0881e027c07
 
 MESSAGES = {
     "ru": {
@@ -221,9 +225,18 @@ def normalize_lang(lang):
     return "ru"
 
 async def get_user_lang(user_id: int) -> str:
+<<<<<<< HEAD
     """Получить язык пользователя из базы по telegram_id. Возвращает 'ru' по умолчанию."""
     user = await UserManager.get_user(user_id)
     if user and user.get("language"):
+=======
+    """Получить язык пользователя из базы (API) по telegram_id. Возвращает 'ru' по умолчанию."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
+                if resp.status == 200:
+                    user = await resp.json()
+>>>>>>> 84bfe15ac6710e0105e1b6ec45e2f0881e027c07
                     return normalize_lang(user.get("language", "ru"))
     return "ru"
 

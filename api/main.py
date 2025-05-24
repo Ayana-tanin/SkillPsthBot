@@ -1,12 +1,25 @@
 from fastapi import FastAPI, Query
 from .models import User, TestResult, TestProgress
-from .db import get_connection
+from .db import get_connection, init_database
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import json
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    """Инициализация при запуске приложения."""
+    try:
+        init_database()
+        logger.info("База данных инициализирована при запуске")
+    except Exception as e:
+        logger.error(f"Ошибка при инициализации базы данных: {e}")
+        raise
 
 @app.post("/users/")
 def create_or_update_user(user: User):
@@ -19,21 +32,6 @@ def create_or_update_user(user: User):
             user_dict[field] = json.dumps(user_dict[field], ensure_ascii=False)
         elif user_dict.get(field) is None:
             user_dict[field] = json.dumps([])
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            telegram_id BIGINT UNIQUE,
-            fio VARCHAR(255),
-            school VARCHAR(255),
-            class_number INT,
-            class_letter VARCHAR(10),
-            gender VARCHAR(10),
-            birth_year INT,
-            city VARCHAR(255),
-            language VARCHAR(20),
-            artifacts TEXT,
-            opened_profiles TEXT
-        )""")
     cursor.execute("""
         INSERT INTO users (telegram_id, fio, school, class_number, class_letter, gender, birth_year, city, language, artifacts, opened_profiles)
         VALUES (%(telegram_id)s, %(fio)s, %(school)s, %(class_number)s, %(class_letter)s, %(gender)s, %(birth_year)s, %(city)s, %(language)s, %(artifacts)s, %(opened_profiles)s)
@@ -64,16 +62,6 @@ def get_user(telegram_id: int = Query(...)):
 def save_test_result(result: TestResult):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS test_results (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            telegram_id BIGINT,
-            finished_at DATETIME,
-            profile VARCHAR(255),
-            score INT,
-            details TEXT
-        )
-    """)
     cursor.execute(
         """
         INSERT INTO test_results (telegram_id, finished_at, profile, score, details)

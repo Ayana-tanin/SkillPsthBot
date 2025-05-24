@@ -18,13 +18,25 @@ class Settings(BaseSettings):
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
     REDIS_DB: int = int(os.getenv("REDIS_DB", 0))
     
+    # Настройки MySQL (Railway)
+    MYSQL_HOST: str = os.getenv("MYSQLHOST", "localhost")
+    MYSQL_USER: str = os.getenv("MYSQLUSER", "root")
+    MYSQL_PASSWORD: str = os.getenv("MYSQLPASSWORD", "")
+    MYSQL_DATABASE: str = os.getenv("MYSQLDATABASE", "railway")
+    MYSQL_PORT: int = int(os.getenv("MYSQLPORT", "3306"))
+    
     # Настройки логирования
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     LOG_FILE: str = os.getenv("LOG_FILE", "bot.log")
     
     # Список администраторов (строка, парсится вручную)
     ADMIN_IDS: str = os.getenv("ADMIN_IDS", "")
-     
+    
+    # Настройки API
+    API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
+    PORT: int = int(os.getenv("PORT", "8000"))  # Порт из Railway
+    API_URL: str = os.getenv("API_URL", f"http://localhost:{PORT}")  # Всегда используем localhost для внутренних запросов
+    
     class Config:
         env_file = ".env"
         extra = 'allow'
@@ -44,6 +56,11 @@ class Settings(BaseSettings):
             pass
         # Иначе парсим через запятую
         return [int(x) for x in value.split(',') if x.strip().isdigit()]
+
+    @property
+    def mysql_url(self) -> str:
+        """Получить URL подключения к MySQL в формате Railway."""
+        return f"mysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
 
 settings = Settings()
 

@@ -3,10 +3,22 @@ from utils.states import TestStates
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from utils.messages import get_user_lang, normalize_lang
+<<<<<<< HEAD
 from database import UserManager
 
 async def get_user_data_from_db(telegram_id: int):
     return await UserManager.get_user(telegram_id)
+=======
+import aiohttp
+from config import settings
+
+async def get_user_data_from_api(telegram_id: int):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={telegram_id}") as resp:
+            if resp.status == 200:
+                return await resp.json()
+            return None
+>>>>>>> 84bfe15ac6710e0105e1b6ec45e2f0881e027c07
 
 async def start_test_flow(message: Message, state: FSMContext):
     await state.clear()

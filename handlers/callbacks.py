@@ -14,7 +14,11 @@ from utils.keyboards import (
 )
 from utils.states import RegistrationStates
 from utils.states import SettingsStates
+<<<<<<< HEAD
 from database import UserManager
+=======
+from config import settings
+>>>>>>> 84bfe15ac6710e0105e1b6ec45e2f0881e027c07
 
 router = Router()
 
@@ -96,8 +100,26 @@ async def change_language_callback(callback: CallbackQuery, state: FSMContext):
 async def set_language_callback(callback: CallbackQuery, state: FSMContext):
     lang = "ru" if callback.data == "lang_ru" else "ky"
     user_id = callback.from_user.id
+<<<<<<< HEAD
     # Обновляем язык пользователя в базе
     await UserManager.update_user(user_id, language=lang)
+=======
+    # Получаем текущие данные пользователя
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
+            user = await resp.json()
+    if not user or not user.get("telegram_id"):
+        user = {"telegram_id": user_id, "language": lang}
+    else:
+        user["language"] = lang
+    # Сериализация списков, если нужно
+    if isinstance(user.get('artifacts'), list):
+        user['artifacts'] = json.dumps(user['artifacts'], ensure_ascii=False)
+    if isinstance(user.get('opened_profiles'), list):
+        user['opened_profiles'] = json.dumps(user['opened_profiles'], ensure_ascii=False)
+    async with aiohttp.ClientSession() as session:
+        await session.post(f"{settings.API_URL}/users/", json=user)
+>>>>>>> 84bfe15ac6710e0105e1b6ec45e2f0881e027c07
     await callback.message.edit_text(get_message("language_changed", lang, lang_name="Кыргызский" if lang == "ky" else "Русский"))
     await state.clear()
     await callback.message.answer(get_message("welcome", lang), reply_markup=get_main_keyboard(lang))
@@ -113,7 +135,13 @@ async def update_main_menu(callback: CallbackQuery):
 async def show_profile(callback: CallbackQuery):
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
+<<<<<<< HEAD
     user = await UserManager.get_user(user_id)
+=======
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{settings.API_URL}/users/?telegram_id={user_id}") as resp:
+            user = await resp.json()
+>>>>>>> 84bfe15ac6710e0105e1b6ec45e2f0881e027c07
     if not user or not user.get("telegram_id"):
         await callback.message.answer("Профиль не найден. Пожалуйста, пройдите регистрацию.")
         await callback.answer()
