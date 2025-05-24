@@ -3,6 +3,7 @@ import os
 import asyncio
 import subprocess
 import sys
+import time
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -17,11 +18,38 @@ load_dotenv()
 
 # Настройка логирования
 logging.basicConfig(
-    level=logging.DEBUG,  # Изменено на DEBUG для более подробного логирования
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[ logging.StreamHandler() ]  # Вывод только в консоль (удалён FileHandler)
+    handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
+
+# Создаем отдельный логгер для FastAPI
+fastapi_logger = logging.getLogger('fastapi')
+fastapi_logger.setLevel(logging.INFO)
+fastapi_handler = logging.StreamHandler()
+fastapi_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+fastapi_logger.addHandler(fastapi_handler)
+
+def wait_for_tables(cursor, expected_tables, max_retries=30, retry_interval=1):
+    """Ожидание создания всех таблиц."""
+    for i in range(max_retries):
+        cursor.execute("SHOW TABLES")
+        tables = [table[0] for table in cursor.fetchall()]
+        missing_tables = set(expected_tables) - set(tables)
+        
+        if not missing_tables:
+            logger.info(f"Все таблицы созданы: {', '.join(tables)}")
+            return True
+            
+        logger.info(f"Ожидание создания таблиц... (попытка {i+1}/{max_retries})")
+        logger.info(f"Ожидаемые таблицы: {', '.join(expected_tables)}")
+        logger.info(f"Найденные таблицы: {', '.join(tables)}")
+        logger.info(f"Отсутствующие таблицы: {', '.join(missing_tables)}")
+        time.sleep(retry_interval)
+    
+    logger.error(f"Не все таблицы созданы за отведенное время. Ожидались: {', '.join(expected_tables)}")
+    return False
 
 def run_fastapi():
     """Запуск FastAPI в отдельном процессе."""
@@ -34,13 +62,16 @@ def run_fastapi():
             universal_newlines=True
         )
         
-        # Вывод логов FastAPI
+        # Вывод логов FastAPI через отдельный логгер
         def log_output(pipe, log_func):
             for line in pipe:
-                log_func(line.strip())
+                if line.strip():
+                    # Убираем префикс INFO: из логов FastAPI
+                    line = line.replace("INFO:     ", "").strip()
+                    log_func(line)
         
-        threading.Thread(target=log_output, args=(process.stdout, logger.info), daemon=True).start()
-        threading.Thread(target=log_output, args=(process.stderr, logger.error), daemon=True).start()
+        threading.Thread(target=log_output, args=(process.stdout, fastapi_logger.info), daemon=True).start()
+        threading.Thread(target=log_output, args=(process.stderr, fastapi_logger.error), daemon=True).start()
         
         return process
     except Exception as e:
@@ -80,14 +111,22 @@ async def on_startup():
         # Запускаем FastAPI
         api_process = run_fastapi()
         
-        # Проверяем подключение к базе данных
+        # Даем время на запуск FastAPI
+        await asyncio.sleep(2)
+        
+        # Проверяем подключение к базе данных и создание таблиц
         try:
             from api.db import get_connection
             conn = get_connection()
             cursor = conn.cursor()
-            cursor.execute("SHOW TABLES")
-            tables = cursor.fetchall()
-            logger.info(f"Подключение к базе данных успешно. Найдены таблицы: {[table[0] for table in tables]}")
+            
+            # Список ожидаемых таблиц
+            expected_tables = ['users', 'test_results', 'test_progress', 'goals', 'materials', 'notes']
+            
+            # Ждем создания всех таблиц
+            if not wait_for_tables(cursor, expected_tables):
+                raise Exception("Не все таблицы были созданы")
+                
             cursor.close()
             conn.close()
         except Exception as e:
