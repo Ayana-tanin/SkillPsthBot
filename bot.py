@@ -50,7 +50,19 @@ def register_handlers(dispatcher):
 async def on_startup():
     try:
         logger.info("Запуск бота...")
-        # Здесь может быть дополнительная инициализация
+        # Проверяем подключение к базе данных
+        try:
+            from api.db import get_connection
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SHOW TABLES")
+            tables = cursor.fetchall()
+            logger.info(f"Подключение к базе данных успешно. Найдены таблицы: {[table[0] for table in tables]}")
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            logger.error(f"Ошибка при проверке базы данных: {e}")
+            raise
         logger.info("Бот успешно запущен")
     except Exception as e:
         logger.error(f"Ошибка при запуске бота: {e}")
