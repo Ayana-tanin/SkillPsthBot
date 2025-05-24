@@ -1,9 +1,12 @@
 import logging
 import os
 import asyncio
+import subprocess
+import sys
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+import threading
 
 # Импорт обработчиков
 from handlers import commands, callbacks, messages, goals, materials, test, registration
@@ -19,6 +22,30 @@ logging.basicConfig(
     handlers=[ logging.StreamHandler() ]  # Вывод только в консоль (удалён FileHandler)
 )
 logger = logging.getLogger(__name__)
+
+def run_fastapi():
+    """Запуск FastAPI в отдельном процессе."""
+    try:
+        logger.info("Запуск FastAPI приложения...")
+        process = subprocess.Popen(
+            [sys.executable, "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", os.getenv("PORT", "8000")],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True
+        )
+        
+        # Вывод логов FastAPI
+        def log_output(pipe, log_func):
+            for line in pipe:
+                log_func(line.strip())
+        
+        threading.Thread(target=log_output, args=(process.stdout, logger.info), daemon=True).start()
+        threading.Thread(target=log_output, args=(process.stderr, logger.error), daemon=True).start()
+        
+        return process
+    except Exception as e:
+        logger.error(f"Ошибка при запуске FastAPI: {e}")
+        raise
 
 # Инициализация бота и диспетчера
 try:
@@ -50,6 +77,9 @@ def register_handlers(dispatcher):
 async def on_startup():
     try:
         logger.info("Запуск бота...")
+        # Запускаем FastAPI
+        api_process = run_fastapi()
+        
         # Проверяем подключение к базе данных
         try:
             from api.db import get_connection
@@ -63,6 +93,7 @@ async def on_startup():
         except Exception as e:
             logger.error(f"Ошибка при проверке базы данных: {e}")
             raise
+            
         logger.info("Бот успешно запущен")
     except Exception as e:
         logger.error(f"Ошибка при запуске бота: {e}")
