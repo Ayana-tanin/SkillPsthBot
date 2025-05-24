@@ -5,10 +5,12 @@ import signal
 import subprocess
 import sys
 import time
+import threading
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
 from database import db, UserManager, TestProgressManager, TestResultsManager
 
 # Импорт обработчиков
@@ -38,7 +40,10 @@ fastapi_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(level
 fastapi_logger.addHandler(fastapi_handler)
 
 # Инициализация бота и диспетчера
-bot = Bot(token=settings.BOT_TOKEN, parse_mode=ParseMode.HTML)
+bot = Bot(
+    token=settings.BOT_TOKEN,
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
